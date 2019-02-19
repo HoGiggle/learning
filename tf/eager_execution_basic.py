@@ -1,0 +1,10 @@
+# !/usr/bin/python
+# coding:utf8
+
+from __future__ import absolute_import, division, print_function
+import tensorflow as tf
+if __name__ == '__main__':
+    tf.enable_eager_execution()
+    x = [[2.]]
+    m = tf.matmul(x, x)
+    print(m)

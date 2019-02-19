@@ -1,5 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+import math
+import random
+
 
 class ListNode(object):
     def __init__(self, x):
@@ -126,6 +129,164 @@ class Solution:
                 right = middle
         return left
 
+    def maxSubArray(self, nums):
+        """
+        :param nums:
+        :return: int
+        """
+        sum1, tmp = nums[0], 0
+        for num in nums:
+            tmp += num
+            if tmp > sum1:
+                sum1 = tmp
+            if tmp < 0:
+                tmp = 0
+        return sum1
+
+    def majorityElement(self, nums):
+        """
+        :type nums: List[int]
+        :rtype: int
+        """
+        res = {}
+        halfLen = len(nums) // 2
+        for num in nums:
+            if num in res:
+                res[num] = res[num] + 1
+            else:
+                res[num] = 1
+            if res[num] > halfLen:
+                return num
+        return 0
+
+    def middle(self, nums, start, end):
+        """
+        :param nums:
+        :param start:
+        :param end:
+        :return: index
+        """
+        i, j, tmp = start, end, nums[start]
+        while i < j:
+            while (i < j) and (tmp >= nums[j]):
+                j = j - 1
+            nums[i] = nums[j]
+            while (i < j) and (tmp <= nums[i]):
+                i = i + 1
+            nums[j] = nums[i]
+        nums[i] = tmp
+        return i
+
+    def swap(self, nums, i, j):
+        tmp = nums[i]
+        nums[i] = nums[j]
+        nums[j] = tmp
+
+    def shuffle(self, nums):
+        size = len(nums)
+        for index, num in enumerate(nums):
+            rand = random.randint(0, size - 1)
+            self.swap(nums, index, rand)
+
+    def findKthLargest(self, nums, k):
+        """
+        :type nums: List[int]
+        :type k: int
+        :rtype: int
+        """
+        self.shuffle(nums)
+        middle = self.middle(nums, 0, len(nums) - 1)
+        local = middle + 1
+        if local == k:
+            return nums[middle]
+        elif local < k:
+            return self.findKthLargest(nums[local:], k - local)
+        else:
+            return self.findKthLargest(nums[:middle], k)
+
+    def searchMatrix(self, matrix, target):
+        """
+        :type matrix: List[List[int]]
+        :type target: int
+        :rtype: bool
+        """
+        if (not matrix) or (len(matrix) < 1) or (len(matrix[0]) < 1):
+            return False
+        m, n = len(matrix), len(matrix[0])
+        if (target < matrix[0][0]) or (target > matrix[m - 1][n - 1]):
+            return False
+
+        row, col = 0, n - 1
+        while (row < m) and (col >= 0):
+            if matrix[row][col] == target:
+                return True
+            elif matrix[row][col] > target:
+                col = col - 1
+            else:
+                row = row + 1
+        return False
+
+    def diffWaysToCompute(self, input):
+        """
+        :type input: str
+        :rtype: List[int]
+        """
+        return [a+b if c == '+' else a-b if c == '-' else a*b for i, c in enumerate(input) if c < '0'
+                for a in self.diffWaysToCompute(input[:i])
+                for b in self.diffWaysToCompute(input[i+1:])] or [int(input)]
+
+    def countRangeSum(self, nums, lower, upper):
+        """
+        :type nums: List[int]
+        :type lower: int
+        :type upper: int
+        :rtype: int
+        """
+        sums = [0] * (len(nums) + 1)
+        for i in range(1, len(sums)):
+            sums[i] = sums[i - 1] + nums[i - 1]
+        return self.countMergeSort(sums, lower, upper, 0, len(sums))
+
+
+    def countMergeSort(self, sums, lower, upper, start, end):
+        if end - start <= 1:
+            return 0
+        mid = (start + end) // 2
+        count = self.countMergeSort(sums, lower, upper, start, mid) \
+                + self.countMergeSort(sums, lower, upper, mid, end)
+
+        idx, cur, arr = 0, mid, [m for m in range(end - start)]
+        for i in range(start, mid):
+            j = mid
+            while (j < end) and (sums[j] - sums[i] < lower):
+                j += 1
+            k = j
+            while (k < end) and (sums[k] - sums[i] <= upper):
+                k += 1
+            while (cur < end) and (sums[cur] < sums[i]):
+                arr[idx] = sums[cur]
+                cur += 1
+                idx += 1
+
+            arr[idx] = sums[i]
+            idx += 1
+            count += k - j
+
+        if cur != mid:
+            for i in range(cur - start):
+                sums[start + i] = arr[i]
+        return count
+
+
+
+
+
+
+
+
+
 if __name__ == '__main__':
     s = Solution()
-    print s.findPeakElement([1, 2])
+    # print s.findPeakElement([1, 2])
+    # print(s.findKthLargest([3,2,1,5,6,4], 2))
+    print(s.countRangeSum([-2,5,-1], -2, 2))
