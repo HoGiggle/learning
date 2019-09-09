@@ -56,6 +56,7 @@ class PrintDot(keras.callbacks.Callback):
 model1 = build()
 model1.summary()
 
+
 EPOCHS = 500
 early_stop = keras.callbacks.EarlyStopping(monitor='val_loss', patience=20)
 history = model1.fit(train_data, train_labels, epochs=EPOCHS,

@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import math
 import random
+import numpy as np
 
 
 class ListNode(object):
@@ -167,6 +168,13 @@ class Solution:
         :return: index
         """
         i, j, tmp = start, end, nums[start]
+        # while i < j:
+        #     while (i < j) and (tmp <= nums[j]):
+        #         j = j - 1
+        #     nums[i] = nums[j]
+        #     while (i < j) and (tmp >= nums[i]):
+        #         i = i + 1
+        #     nums[j] = nums[i]
         while i < j:
             while (i < j) and (tmp >= nums[j]):
                 j = j - 1
@@ -277,16 +285,61 @@ class Solution:
                 sums[start + i] = arr[i]
         return count
 
+    def minCostClimbingStairs(self, cost):
+        """
+        :type cost: List[int]
+        :rtype: int
+        """
+        lenth = len(cost)
+        if lenth == 1:
+            return cost[0]
+        if lenth == 2:
+            return cost[1]
 
+        one, sec = cost[0], cost[1]
+        for i in range(2, len(cost)):
+            tmp = sec
+            sec = min(one, sec) + cost[i]
+            one = tmp
+        return sec
 
+    def probabilityRecall_bin(self, data):
+        """
+        累计概率 + 二分查找
+        :param data: List[List[String, Int]]
+        :return:
+        """
+        # 累计概率
+        sumdata = [0] * (len(data) + 1)
+        sumdata[0] = 0
+        for i in range(0, len(data)):
+            sumdata[i + 1] = sumdata[i] + data[i][1]
 
+        # 随机值
+        rand = random.randint(1, sumdata[-1])
+        start, end = 0, len(sumdata) - 1
+        print "rand = %i" % rand
+        while start < end:
+            mid = (start + end) // 2
+            if (rand <= sumdata[mid]) and (rand > sumdata[mid - 1]):
+                return data[mid - 1][0]
+            elif rand > sumdata[mid]:
+                start = mid + 1
+            else:
+                end = mid - 1
+        return data[start - 1][0]
 
+    def probabilityRecall_counting(self, data):
 
-
+        return
 
 
 if __name__ == '__main__':
     s = Solution()
     # print s.findPeakElement([1, 2])
     # print(s.findKthLargest([3,2,1,5,6,4], 2))
-    print(s.countRangeSum([-2,5,-1], -2, 2))
+    # print(s.minCostClimbingStairs([1, 100, 1, 1, 1, 100, 1, 1, 100, 1]))
+
+    sq = [['召回', 1], ['排序', 2], ['投递', 3], ['haha', 4]]
+    for i in range(20):
+        print "result: %s" % s.probabilityRecall_bin(sq)
