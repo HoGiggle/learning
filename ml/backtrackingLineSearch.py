@@ -4,6 +4,7 @@
 from matplotlib.pyplot import figure, hold, plot, show, xlabel, ylabel, legend
 import math
 
+
 def backtracking_Armijo(alpha, beta, step, f, grad_f, d, x):
     """
     :param alpha:
@@ -35,6 +36,7 @@ def backtracking_Armijo(alpha, beta, step, f, grad_f, d, x):
         epoch -= 1
 
     return step
+
 
 if __name__ == '__main__':
     # 损失函数, 梯度方向, 下降优化方向
