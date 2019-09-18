@@ -783,8 +783,175 @@ class Solution:
         return data[start - 1][0]
 
     def probabilityRecall_counting(self, data):
-
         return
+
+    def findUnsortedSubarray(self, nums):
+        """
+        :type nums: List[int]
+        :rtype: int
+        """
+        # # tip1：两个方向, 头部小于后面最小值, 尾部大于前面最大值
+        # if nums is None or len(nums) <= 1:
+        #     return 0
+        #
+        # length = len(nums)
+        # min_list, max_list = [nums[length-1]]*length, [nums[0]]*length
+        # for i in xrange(1, length):
+        #     max_list[i] = max(nums[i], max_list[i-1])
+        #     min_list[length-i-1] = min(nums[length-i-1], min_list[length-i])
+        #
+        # count = 0
+        # for i in xrange(length):
+        #     if nums[i] > min_list[i]:
+        #         break
+        #     count += 1
+        # for i in xrange(length):
+        #     if nums[length-i-1] < max_list[length-i-1]:
+        #         break
+        #     count += 1
+        # return length-count if count < length else 0
+
+        # tip2：找到两个位置, 前面第一个大于后面的index, 后面第一个小于前面的index
+        if nums is None or len(nums) <= 1:
+            return 0
+
+        length, start, end = len(nums), -1, -2
+        max_v, min_v = nums[0], nums[length-1]
+        for i in xrange(1, length):
+            max_v = max(max_v, nums[i])
+            min_v = min(min_v, nums[length-i-1])
+            if nums[i] < max_v: end = i
+            if nums[length-i-1] > min_v: start = length - i - 1
+        return end - start + 1
+
+    def pathSum(self, root, sum):
+        """
+        :type root: TreeNode
+        :type sum: int
+        :rtype: int
+        """
+        def helper(p, s, ss, list):
+            if p is None:
+                return 0
+            list1 = list[:]
+            list1.append(p.val)
+
+            if p.val == s:
+                print list1
+            t = 0
+            if p.left is not None:
+                t += helper(p.left, s - p.val, ss, list1)
+                t += helper(p.left, ss, ss, [])
+
+            if p.right is not None:
+                t += helper(p.right, s - p.val,ss, list1)
+                t += helper(p.right, ss, ss, [])
+            return (1 if p.val == s else 0) + t
+        helper(root, sum, sum, [])
+
+        # if root is None:
+        #     return 0
+        # return (1 if root.val == sum else 0) \
+        #        + self.pathSum(root.left, sum - root.val) + self.pathSum(root.right, sum - root.val) \
+        #        + self.pathSum(root.left, sum) + self.pathSum(root.right, sum)
+
+    def reconstructQueue(self, people):
+        """
+        :type people: List[List[int]]
+        :rtype: List[List[int]]
+        小值往前加不影响大值k
+        """
+        people.sort(key=lambda x: (-x[0], x[1]))
+        que = []
+        for p in people:
+            que.insert(p[1], p)
+        return que
+
+    def dailyTemperatures(self, T):
+        """
+        :type T: List[int]
+        :rtype: List[int]
+        """
+        # T = [73, 74, 75, 71, 69, 72, 76, 73]
+        # [1, 1, 4, 2, 1, 1, 0, 0]
+
+        # # 1. 暴力法
+        # length = len(T)
+        # res = [0] * length
+        # for i in xrange(length-1):
+        #     for j in xrange(i+1, length):
+        #         if T[i] < T[j]:
+        #             res[i] = j - i
+        #             break
+        # return res
+
+        # 2. 栈实现
+        res, stack, top = [0] * len(T), [0] * len(T), -1
+        for i in xrange(len(T)):
+            while top > -1 and (T[i] > T[stack[top]]):
+                idx = stack[top]
+                res[idx] = i - idx
+                top -= 1
+            top += 1
+            stack[top] = i
+        return res
+
+    def topKFrequent(self, nums, k):
+        """
+        :type nums: List[int]
+        :type k: int
+        :rtype: List[int]
+        """
+        dic = {}
+        for num in nums:
+            if dic.has_key(num):
+                dic[num] = dic.get(num) + 1
+            else:
+                dic[num] = 1
+
+        def middle(list, start, end):
+            l, r, tmp = start, end, list[start]
+            while r > l:
+                while r > l and list[r] >= tmp: r -= 1
+                list[l] = list[r]
+                while r > l and list[l] <= tmp: l += 1
+                list[r] = list[l]
+            list[l] = tmp
+            return l
+
+        def topKMax(list, start, end, k):
+            mid = middle(list, start, end)
+            if mid == k:
+                return list[:mid]
+            elif mid > k:
+                return topKMax(list, start, mid - 1, k)
+            else:
+                return topKMax(list, mid + 1, end, k)
+        return topKMax(dic.values(), 0, len(dic) - 1, k)
+
+    def fastSort(self, nums):
+        def middle(list, start, end):
+            l, r, tmp = start, end, list[start]
+            while r > l:
+                while r > l and list[r] >= tmp: r -= 1
+                list[l] = list[r]
+                while r > l and list[l] <= tmp: l += 1
+                list[r] = list[l]
+            list[l] = tmp
+            return l
+
+        def sort(list, start, end):
+            if start > end:
+                return
+            mid = middle(list, start, end)
+            sort(list, start, mid - 1)
+            sort(list, mid + 1, end)
+            return list
+
+        return sort(nums, 0, len(nums) - 1)
+
+
+
 
 
 if __name__ == '__main__':
@@ -792,13 +959,4 @@ if __name__ == '__main__':
     # print s.findPeakElement([1, 2])
     # print(s.findKthLargest([3,2,1,5,6,4], 2))
 
-    root = TreeNode(1)
-    root.left = TreeNode(2)
-    root.left.left = TreeNode(2)
-    root.right = TreeNode(2)
-    root.right.left = TreeNode(2)
-    print s.isSymmetric(root)
-
-    sq = [['召回', 1], ['排序', 2], ['投递', 3], ['haha', 4]]
-    for i in range(20):
-        print "result: %s" % s.probabilityRecall_bin(sq)
+    print s.fastSort([1,1,4,2,2,3])
