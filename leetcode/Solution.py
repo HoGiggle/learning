@@ -4,6 +4,7 @@ import math
 import random
 import sys
 import numpy as np
+from collections import defaultdict,Counter
 
 
 class ListNode(object):
@@ -331,23 +332,61 @@ class Solution:
                     break
         return result[N]
 
+    # def maxProfit(self, prices):
+    #     """
+    #     :type prices: List[int]
+    #     :rtype: int
+    #
+    #     profit[i] = prices[i] - minPrice[i-1]
+    #     """
+    #     # [7, 1, 5, 3, 6, 4]
+    #     if len(prices) < 2:
+    #         return 0
+    #     minV, profit = prices[0], 0
+    #     for i in range(1, len(prices)):
+    #         if (prices[i] - minV) > profit:
+    #             profit = prices[i] - minV
+    #         if prices[i] < minV:
+    #             minV = prices[i]
+    #     return profit
+
+    # def maxProfit(self, prices):
+    #     """
+    #     :type prices: List[int]
+    #     :rtype: int
+    #     """
+    #     buy, profit = sys.maxint, 0
+    #     for price in prices:
+    #         if price - buy > 0:
+    #             profit += price - buy
+    #         buy = price
+    #     return profit
+    #
+    #     profit = 0
+    #     for i in range(len(prices) - 1):
+    #         profit += max(0, prices[i+1] - prices[i])
+    #     return profit
+
     def maxProfit(self, prices):
         """
         :type prices: List[int]
         :rtype: int
-
-        profit[i] = prices[i] - minPrice[i-1]
         """
-        # [7, 1, 5, 3, 6, 4]
-        if len(prices) < 2:
-            return 0
-        minV, profit = prices[0], 0
-        for i in range(1, len(prices)):
-            if (prices[i] - minV) > profit:
-                profit = prices[i] - minV
-            if prices[i] < minV:
-                minV = prices[i]
-        return profit
+        def helper(prices, s, e):
+            if e - s <= 0:
+                return 0
+            if e - s == 1:
+                return max(prices[e] - prices[s], 0)
+            profit = 0
+            for i in (s+1, e):
+                left = helper(prices, s, i-1)
+                right = helper(prices, i+1, e)
+                if left + right > profit:
+                    profit = left + right
+            return profit
+        return helper(prices, 0, len(prices)-1)
+
+
 
     def minCostClimbingStairs(self, cost):
         """
@@ -395,7 +434,7 @@ class Solution:
             finalMax = max(middleMax, finalMax)
         return finalMax
 
-    def rob(self, nums):
+    def rob1(self, nums):
         """
         :type nums: List[int]
         :rtype: int
@@ -746,16 +785,6 @@ class Solution:
         return True
 
 
-
-
-
-        one, sec = cost[0], cost[1]
-        for i in range(2, len(cost)):
-            tmp = sec
-            sec = min(one, sec) + cost[i]
-            one = tmp
-        return sec
-
     def probabilityRecall_bin(self, data):
         """
         累计概率 + 二分查找
@@ -902,32 +931,17 @@ class Solution:
         :type k: int
         :rtype: List[int]
         """
-        dic = {}
-        for num in nums:
-            if dic.has_key(num):
-                dic[num] = dic.get(num) + 1
-            else:
-                dic[num] = 1
+        # 堆排序
+        freq_dic = defaultdict(list)
+        for key, freq in Counter(nums).items():
+            freq_dic[freq].append(key)
 
-        def middle(list, start, end):
-            l, r, tmp = start, end, list[start]
-            while r > l:
-                while r > l and list[r] >= tmp: r -= 1
-                list[l] = list[r]
-                while r > l and list[l] <= tmp: l += 1
-                list[r] = list[l]
-            list[l] = tmp
-            return l
+        res = []
+        for freq in range(len(nums), 0, -1):
+            res.extend(freq_dic[freq])
+            if len(res) >= k: return res[:k]
+        return res[:k]
 
-        def topKMax(list, start, end, k):
-            mid = middle(list, start, end)
-            if mid == k:
-                return list[:mid]
-            elif mid > k:
-                return topKMax(list, start, mid - 1, k)
-            else:
-                return topKMax(list, mid + 1, end, k)
-        return topKMax(dic.values(), 0, len(dic) - 1, k)
 
     def fastSort(self, nums):
         def middle(list, start, end):
@@ -950,6 +964,633 @@ class Solution:
 
         return sort(nums, 0, len(nums) - 1)
 
+    def rangeSumBST(self, root, L, R):
+        """
+        :type root: TreeNode
+        :type L: int
+        :type R: int
+        :rtype: int
+        """
+        def helper(p, l, r):
+            if p is None: return 0
+            if p.val <= r and p.val >= l:
+                return helper(p.left, l, r) + helper(p.right, l, r) + p.val
+            elif p.val < l:
+                return helper(p.right, l, r)
+            else:
+                return helper(p.left, l, r)
+        return helper(root, L, R)
+
+    def inorderTraversal(self, root):
+        """
+        :type root: TreeNode
+        :rtype: List[int]
+        """
+        def helper(p, list):
+            if p is None: return
+            helper(p.left, list)
+            list.append(p.val)
+            helper(p.right, list)
+        res = []
+        helper(root, res)
+        return res
+
+    def permute(self, nums):
+        """
+        :type nums: List[int]
+        :rtype: List[List[int]]
+        """
+        def backtrack(nums, length, res, tmp_list, tmp_set):
+            if len(tmp_list) == length:
+                res.append(tmp_list[:])
+            else:
+                for n in nums:
+                    if tmp_set.has_key(n): continue
+                    tmp_list.append(n)
+                    tmp_set[n] = None
+                    backtrack(nums, length, res, tmp_list, tmp_set)
+                    tmp_list.pop()
+                    tmp_set.pop(n)
+
+        res = []
+        backtrack(nums, len(nums), res, [], {})
+        return res
+
+    def generateParenthesis(self, n):
+        """
+        :type n: int
+        :rtype: List[str]
+        """
+
+    def findDuplicate(self, nums):
+        """
+        :type nums: List[int]
+        :rtype: int
+        """
+
+    def subsets(self, nums):
+        """
+        :type nums: List[int]
+        :rtype: List[List[int]]
+        """
+        def helper(nums, length, res, tmp_list, start):
+            res.append(tmp_list[:])
+            for i in xrange(start, length):
+                tmp_list.append(nums[i])
+                helper(nums, length, res, tmp_list, i+1)
+                tmp_list.pop()
+        res = []
+        helper(nums, len(nums), res, [], 0)
+        return res
+
+    def detectCycle(self, head):
+        """
+        :type head: ListNode
+        :rtype: ListNode
+        """
+        slow, fast, isCycle = head, head, False
+        while slow is not None and fast is not None:
+            slow = slow.next
+            if fast.next is None: return None
+            fast = fast.next.next
+            if slow == fast:
+                isCycle = True
+                break
+
+        if not isCycle: return None
+        slow = head
+        while slow != fast:
+            slow = slow.next
+            fast = fast.next
+        return slow
+
+    def findDuplicate(self, nums):
+        """
+        :type nums: List[int]
+        :rtype: int
+        """
+        # # binary search, O(N * logN)
+        # if len(nums) <= 1: return -1
+        #
+        # low, high = 0, len(nums)-1
+        # while low < high:
+        #     middle, count = (low + high)//2, 0
+        #     for num in nums:
+        #         if num <= middle:
+        #             count += 1
+        #     if count > middle:
+        #         high = middle
+        #     else:
+        #         low = middle + 1
+        # return low
+
+        # slow fast pointer
+        if len(nums) <= 1: return -1
+        slow, fast = nums[0], nums[nums[0]]
+        while slow != fast:
+            slow = nums[slow]
+            fast = nums[nums[fast]]
+
+        slow = 0
+        while slow != fast:
+            slow = nums[slow]
+            fast = nums[fast]
+        return slow
+
+    def rotate(self, matrix):
+        """
+        :type matrix: List[List[int]]
+        :rtype: None Do not return anything, modify matrix in-place instead.
+        """
+        def swap(matrix, r1, c1, r2, c2):
+            tmp = matrix[r1][c1]
+            matrix[r1][c1] = matrix[r2][c2]
+            matrix[r2][c2] = tmp
+
+        N = len(matrix)
+        for row in range(N // 2):
+            for col in range(row, N - row - 1):
+                swap(matrix, row, col, col, N-row-1)
+                swap(matrix, row, col, N-row-1, N-col-1)
+                swap(matrix, row, col, N-col-1, row)
+
+    def groupAnagrams(self, strs):
+        """
+        :type strs: List[str]
+        :rtype: List[List[str]]
+        """
+        prime_list = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101]
+        res_map = {}
+        for str in strs:
+            value = 1
+            for i in range(len(str)):
+                value *= prime_list[ord(str[i])-97]
+            if res_map.has_key(value):
+                res_map[value].append(str)
+            else:
+                res_map[value] = [str]
+
+        res_list = []
+        for str_list in res_map.values():
+            res_list.append(str_list)
+        return res_list
+
+    def uniquePaths(self, m, n):
+        """
+        :type m: int
+        :type n: int
+        :rtype: int
+        """
+        # dp(m, n) = dp(m, n-1) + dp(m-1, n)
+        dp = [[0]*n for _ in range(m)]
+        for i in range(m):
+            dp[i][0] = 1
+        for j in range(n):
+            dp[0][j] = 1
+
+        for i in range(1, m):
+            for j in range(1, n):
+                dp[i][j] = dp[i][j-1] + dp[i-1][j]
+        return dp[m-1][n-1]
+
+    def rob(self, root):
+        """
+        :type root: TreeNode
+        :rtype: int
+        """
+
+        # if root is None:
+        #     return 0
+        # dp1, dp2 = root.val, 0
+        # if root.left is not None:
+        #     dp2 += self.rob(root.left)
+        #     if root.left.left is not None:
+        #         dp1 += self.rob(root.left.left)
+        #     if root.left.right is not None:
+        #         dp1 += self.rob(root.left.right)
+        #
+        # if root.right is not None:
+        #     dp2 += self.rob(root.right)
+        #     if root.right.left is not None:
+        #         dp1 += self.rob(root.right.left)
+        #     if root.right.right is not None:
+        #         dp1 += self.rob(root.right.right)
+        #
+        # return max(dp1, dp2)
+
+        # def helper(root, dic):
+        #     if root is None: return 0
+        #     if dic.has_key(root): return dic[root]
+        #
+        #     res = 0
+        #     if root.left is not None:
+        #         res += (helper(root.left.left, dic) + helper(root.left.right, dic))
+        #     if root.right is not None:
+        #         res += (helper(root.right.left, dic) + helper(root.right.right, dic))
+        #
+        #     res = max(root.val + res, helper(root.left, dic) + helper(root.right, dic))
+        #     dic[root] = res
+        #     return res
+        # return helper(root, {})
+
+        def helper(root):
+            if root is None: return [0, 0]
+            left = helper(root.left)
+            right = helper(root.right)
+
+            res = [0, 0]
+            res[0] = root.val + left[1] + right[1]
+            res[1] = max(left) + max(right)
+            return res
+
+        return max(helper(root))
+
+    def minPathSum(self, grid):
+        """
+        :type grid: List[List[int]]
+        :rtype: int
+        """
+        if len(grid) == 0: return 0
+        row, col = len(grid), len(grid[0])
+        one_row = [0] * (col + 1)
+
+        for i in range(1, col + 1):
+            one_row[i] = grid[0][i-1] + one_row[i-1]
+
+        for i in range(1, row):
+            two_row = [sys.maxint] * (col + 1)
+            for j in range(col):
+                two_row[j+1] = min(two_row[j], one_row[j+1]) + grid[i][j]
+            one_row = two_row[:]
+        return two_row[col]
+
+    def numTrees(self, n):
+        """
+        :type n: int
+        :rtype: int
+        """
+        dp = [0] * (n + 1)
+        dp[0] = dp[1] = 1
+        for size in range(2, n + 1):
+            for root in range(1, size + 1):
+                dp[size] += dp[root-1] * dp[size-root]
+        return dp[n]
+
+    def decodeString(self, s):
+        """
+        :type s: str
+        :rtype: str
+        """
+        # s = "3[a]2[bc]", return "aaabcbc".
+        # s = "3[a2[c]]", return "accaccacc".
+        # s = "2[abc]3[cd]ef", return "abcabccdcdcdef".
+        num_st, num_top, chr_st, chr_top = [None]*len(s), -1, [None]*len(s), -1
+        cur_num, res = 0, []
+        for ch in s:
+            if ch >= '0' and ch <= '9':
+                cur_num = cur_num * 10 + int(ch)
+            elif ch == '[':
+                num_top += 1
+                num_st[num_top], cur_num = cur_num, 0
+                chr_top += 1
+                chr_st[chr_top] = ch
+            elif ch == ']':
+                mid = []
+                while chr_st[chr_top] != '[':
+                    mid.insert(0, chr_st[chr_top])
+                    chr_top -= 1
+                chr_top -= 1
+
+                repeat_str, mid = ''.join(mid), []
+                for _ in range(num_st[num_top]):
+                    mid.append(repeat_str)
+                num_top -= 1
+
+                if num_top == -1:
+                    res.append(''.join(mid))
+                else:
+                    chr_top += 1
+                    chr_st[chr_top] = ''.join(mid)
+            else:
+                if num_top == -1:
+                    res.append(ch)
+                else:
+                    chr_top += 1
+                    chr_st[chr_top] = ch
+
+        return ''.join(res)
+
+    def findTargetSumWays(self, nums, S):
+        """
+        :type nums: List[int]
+        :type S: int
+        :rtype: int
+        """
+        def helper(nums, s):
+            dp = [0] * (s + 1)
+            dp[0] = 1
+            for n in nums:
+                for i in range(s, n-1, -1):
+                    dp[i] += dp[i-n]
+            return dp[s]
+        sum_all = sum(nums)
+        return 0 if ((sum_all + S) & 1 == 1) else helper(nums, (S + sum_all) // 2)
+
+    def hasPathSum(self, root, sum):
+        """
+        :type root: TreeNode
+        :type sum: int
+        :rtype: bool
+        """
+        if root is None:
+            return False
+
+        if root.val == sum and root.left is None and root.right is None:
+            return True
+        return self.hasPathSum(root.left, sum - root.val) or self.hasPathSum(root.right, sum - root.val)
+
+    def flatten(self, root):
+        """
+        :type root: TreeNode
+        :rtype: None Do not return anything, modify root in-place instead.
+        """
+        def helper(root):
+            if root is None:
+                return None, None
+
+            ls, le = helper(root.left) # left start, left end
+            rs, re = helper(root.right) # right start, right end
+            if ls is None:
+                le = root
+            if rs is None:
+                re = le
+            root.left, root.right, le.right = None, ls, rs
+
+            return root, re
+        helper(root)
+
+    def getPi(self, err):
+        x0= 3.0
+        x1 = x0 + math.sin(x0)
+        while abs(x1-x0) > err:
+            x0 = x1
+            x1 = x0 + math.sin(x0)
+        return x1
+
+    def kthNode(self, root, k):
+        """
+        :type root: TreeNode
+        :return:
+        """
+        # def helper(root, k):
+        #     if root is None:
+        #         return
+        #     helper(root.left, k)
+        #     self.index += 1
+        #     if self.index == k:
+        #         self.node = root
+        #         return
+        #     helper(root.right, k)
+        # self.index, self.node = 0, None
+        # helper(root, k)
+        # return self.node.val
+
+        st, top = [None]*k, -1
+        while top >= 0 or root is not None:
+            if root is not None:
+                top += 1
+                st[top], root = root, root.left
+            else:
+                root, top = st[top], top - 1
+                if k == 1: return root.val
+                k, root = k - 1, root.right
+        return None
+
+    def reachNumber(self, target):
+        """
+        :type target: int
+        :rtype: int
+        """
+        if target < 0: target = -target
+        n = int(math.sqrt(2 * target))
+        while ((n + 1) * n / 2 + target) & 1 == 1 or (n + 1) * n / 2 < target:
+            n += 1
+        return n
+
+    def buildTree(self, preorder, inorder):
+        """
+        :type preorder: List[int]
+        :type inorder: List[int]
+        :rtype: TreeNode
+        """
+        # preorder = [3, 9, 20, 15, 7]
+        # inorder = [9, 3, 15, 20, 7]
+        if len(preorder) == 0 or len(preorder) != len(inorder):
+            return None
+        if len(preorder) == 1:
+            return TreeNode(preorder[0])
+        idx = inorder.index(preorder[0])
+        root = TreeNode(preorder[0])
+        root.left = self.buildTree(preorder[1:idx+1], inorder[:idx])
+        root.right = self.buildTree(preorder[idx+1:], inorder[idx+1:])
+        return root
+
+    def sortColors(self, nums):
+        """
+        :type nums: List[int]
+        :rtype: None Do not return anything, modify nums in-place instead.
+        """
+        def swap(nums, i, j):
+            tmp = nums[i]
+            nums[i], nums[j] = nums[j], tmp
+
+        st, end = 0, len(nums)-1
+        while nums[st] == 0 and st < end: st += 1
+        while nums[end] == 2 and st < end: end -= 1
+
+        mid = st
+        while mid <= end:
+            while nums[mid] == 2:
+                swap(nums, mid, end)
+                end -= 1
+            if nums[mid] == 0:
+                swap(nums, mid, st)
+                st += 1
+            mid += 1
+
+    def letterCombinations(self, digits):
+        """
+        :type digits: str
+        :rtype: List[str]
+        """
+        if len(digits) == 0: return digits
+
+        dict = {}
+        dict['2'] = ['a', 'b', 'c']
+        dict['3'] = ['d', 'e', 'f']
+        dict['4'] = ['g', 'h', 'i']
+        dict['5'] = ['j', 'k', 'l']
+        dict['6'] = ['m', 'n', 'o']
+        dict['7'] = ['p', 'q', 'r', 's']
+        dict['8'] = ['t', 'u', 'v']
+        dict['9'] = ['w', 'x', 'y', 'z']
+
+        cap = 1
+        for ch in digits:
+            cap *= len(dict[ch])
+
+        res, head, tail = ['']*cap, 0, 1
+        for num in digits:
+            mid = tail
+            while head != mid:
+                for ch in dict[num]:
+                    res[tail] = res[head] + ch
+                    tail = (tail + 1) % cap
+                head = (head + 1) % cap
+        return res
+
+    def numIslands(self, grid):
+        """
+        :type grid: List[List[str]]
+        :rtype: int
+        """
+        # use DFS to find all around land
+
+
+    def numSquares(self, n):
+        """
+        :type n: int
+        :rtype: int
+        """
+        sqr = int(math.sqrt(n))
+        double = sqr * sqr
+        if double == n: return 1
+
+        dp = [sys.maxint] * (n + 1)
+        dp[0] = 0
+        for i in range(1, n+1):
+            sqr = int(math.sqrt(i))
+            for j in range(sqr//2, sqr+1):
+                dp[i] = min(dp[i], dp[i - j*j] + 1)
+
+        return dp[n]
+
+    def subarraySum(self, nums, k):
+        """
+        :type nums: List[int]
+        :type k: int
+        :rtype: int
+        """
+        # 1、暴力法
+        # length, count = len(nums), 0
+        # for i in range(length):
+        #     dp = 0
+        #     for j in range(i, length):
+        #         dp += nums[j]
+        #         if dp == k: count += 1
+        # return count
+
+        # 2、dp
+        count, cur, res = {0: 1}, 0, 0
+        for v in nums:
+            cur += v
+            res += count.get(cur - k, 0)
+            count[cur] = count.get(cur, 0) + 1
+        return res
+
+    def canPartition(self, nums):
+        """
+        :type nums: List[int]
+        :rtype: bool
+        """
+        def helper(nums, s):
+            dp = [0] * (s + 1)
+            dp[0] = 1
+            for n in nums:
+                for i in range(s, n-1, -1):
+                    dp[i] += dp[i-n]
+                    if dp[s] > 0: return True
+            return False
+        sum_all = sum(nums)
+        return False if (sum_all & 1 == 1) else helper(nums, sum_all // 2)
+
+    def lengthOfLIS(self, nums):
+        """
+        :type nums: List[int]
+        :rtype: int
+        """
+        # 1、O(n^2)
+        # if len(nums) == 0: return 0
+        # dp = [1] * len(nums)
+        # for i in range(0, len(nums)):
+        #     for j in range(i-1, -1, -1):
+        #         if nums[i] > nums[j]:
+        #             dp[i] = max(dp[i], dp[j] + 1)
+        # return max(dp)
+
+        # 2、O(N * logN)
+        if len(nums) == 0: return 0
+        dp, size = [0] * len(nums), 0
+        for n in nums:
+            s, e = 0, size
+            while s < e:
+                mid = (s + e) // 2
+                if dp[mid] < n:
+                    s = mid + 1
+                else:
+                    e = mid
+            dp[s], size = n, max(s + 1, size)
+        return size
+
+    def lowestCommonAncestor(self, root, p, q):
+        """
+        :type root: TreeNode
+        :type p: TreeNode
+        :type q: TreeNode
+        :rtype: TreeNode
+        """
+        if root in [None, p, q]: return root
+        left = self.lowestCommonAncestor(root.left, p, q)
+        right = self.lowestCommonAncestor(root.right, p, q)
+
+        if left is not None and right is not None: return root
+        return left if left is not None else right
+
+    def canFinish(self, numCourses, prerequisites):
+        """
+        :type numCourses: int
+        :type prerequisites: List[List[int]]
+        :rtype: bool
+        """
+        # 判断有向图是否有环
+        # 1、拓扑排序
+        mat = [[0]*numCourses for _ in range(numCourses)]
+        for l in prerequisites:
+            mat[l[0]][l[1]] = 1
+
+        n, stack, top, d_list = numCourses, [-1]*numCourses, -1, [0]*numCourses
+        for i in range(numCourses):
+            degree = sum(mat[i])
+            d_list[i] = degree
+            if degree == 0:
+                top += 1
+                stack[top] = i
+                n -= 1
+
+        while top >= 0:
+            i = stack[top]
+            top -= 1
+            for j in range(numCourses):
+                if mat[j][i] == 1:
+                    mat[j][i], d_list[j] = 0, d_list[j]-1
+                    if d_list[j] == 0:  #入度为零
+                        top += 1
+                        stack[top] = j
+                        n -= 1
+        return n == 0
+
+
+
 
 
 
@@ -958,5 +1599,5 @@ if __name__ == '__main__':
     s = Solution()
     # print s.findPeakElement([1, 2])
     # print(s.findKthLargest([3,2,1,5,6,4], 2))
+    print s.canFinish(3, [[0,1],[0,2],[1,2]])
 
-    print s.fastSort([1,1,4,2,2,3])
