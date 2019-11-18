@@ -1589,7 +1589,116 @@ class Solution:
                         n -= 1
         return n == 0
 
+    def wordBreak(self, s, wordDict):
+        """
+        :type s: str
+        :type wordDict: List[str]
+        :rtype: bool
+        """
+        def helper(s, dic, dp, st):
+            if dp[st] is not None: return dp[st]
+            if dic.has_key(s[st:]):
+                dp[st] = True
+                return True
 
+            for i in range(st, len(s)-1):
+                if dic.has_key(s[st:i+1]):
+                    dp[i+1] = helper(s, dic, dp, i+1)
+                    if dp[i+1]: return True
+            return False
+
+        dic, dp = {}, [None]*len(s)
+        for word in wordDict:
+            dic[word] = None
+        return helper(s, dic, dp, 0)
+
+    def searchRange(self, nums, target):
+        """
+        :type nums: List[int]
+        :type target: int
+        :rtype: List[int]
+        """
+        def helper(nums, st, end, target):
+            if st > end or nums[st] > target or nums[end] < target:
+                return -1, -1
+            mid = (st + end) // 2
+            if nums[mid] == target:
+                s1, e1 = helper(nums, st, mid-1, target)
+                s2, e2 = helper(nums, mid+1, end, target)
+                s = mid if s1 == -1 else s1
+                e = mid if e2 == -1 else e2
+                return s, e
+            elif nums[mid] > target:
+                return helper(nums, st, mid-1, target)
+            else:
+                return helper(nums, mid+1, end, target)
+        s, e = helper(nums, 0, len(nums)-1, target)
+        return [s, e]
+
+    def search(self, nums, target):
+        """
+        :type nums: List[int]
+        :type target: int
+        :rtype: int
+        """
+        def helper(nums, low, high, target):
+            if low > high: return -1
+
+            mid = (low + high) // 2
+            if nums[mid] == target:
+                return mid
+            elif nums[mid] > target:
+                if nums[mid] < nums[high] or nums[low] <= target:
+                    return helper(nums, low, mid - 1, target)
+                else:
+                    return helper(nums, mid+1, high, target)
+            else:
+                if nums[mid] > nums[low] or nums[high] >= target:
+                    return helper(nums, mid+1, high, target)
+                else:
+                    return helper(nums, low, mid - 1, target)
+        return helper(nums, 0, len(nums)-1, target)
+
+    def exist(self, board, word):
+        """
+        :type board: List[List[str]]
+        :type word: str
+        :rtype: bool
+        """
+        def helper(board, word, i, j, size):
+            if size == len(word): return True
+            if i < 0 or j < 0 or i == len(board) or j == len(board[0]): return False
+            if board[i][j] != word[size]: return False
+
+            tmp, board[i][j] = board[i][j], "*"
+            size += 1
+            res = helper(board, word, i-1, j, size) \
+                  or helper(board, word, i+1, j, size) \
+                  or helper(board, word, i, j-1, size) \
+                  or helper(board, word, i, j+1, size)
+            board[i][j] = tmp
+            return res
+
+
+
+        if len(board) == 0 or len(word) == 0: return False
+        for i in range(len(board)):
+            for j in range(len(board[0])):
+                if board[i][j] == word[0] and helper(board, word, i, j, 0):
+                    return True
+        return False
+
+    def canJump(self, nums):
+        """
+        :type nums: List[int]
+        :rtype: bool
+        """
+        jump = 0
+        for i in range(len(nums)):
+            if jump < i:
+                return False
+            jump = max(jump, nums[i] + i)
+        return jump >= (len(nums) - 1)
 
 
 
@@ -1599,5 +1708,6 @@ if __name__ == '__main__':
     s = Solution()
     # print s.findPeakElement([1, 2])
     # print(s.findKthLargest([3,2,1,5,6,4], 2))
-    print s.canFinish(3, [[0,1],[0,2],[1,2]])
+    # print s.canFinish(3, [[0,1],[0,2],[1,2]])
+    print s.canJump([3,0,8,2,0,0,1])
 
