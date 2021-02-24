@@ -18,6 +18,12 @@ class TreeNode(object):
         self.left = None
         self.right = None
 
+class Node(object):
+    def __init__(self, val, next, random):
+        self.val = val
+        self.next = next
+        self.random = random
+
 
 class NumArray(object):
 
@@ -37,6 +43,34 @@ class NumArray(object):
         :rtype: int
         """
         return self.sums[j + 1] - self.sums[i]
+
+
+class MedianFinder(object):
+
+    def __init__(self):
+        """
+        initialize your data structure here.
+        """
+        self.size = 0
+        self.data = [0]*1000
+        self.count = [0]*1000
+
+    def addNum(self, num):
+        """
+        :type num: int
+        :rtype: None
+        """
+        self.data[num] += 1
+        self.count[num] += 1
+        self.size += 1
+
+
+
+
+    def findMedian(self):
+        """
+        :rtype: float
+        """
 
 
 class Solution:
@@ -1481,15 +1515,6 @@ class Solution:
         :type k: int
         :rtype: int
         """
-        # 1、暴力法
-        # length, count = len(nums), 0
-        # for i in range(length):
-        #     dp = 0
-        #     for j in range(i, length):
-        #         dp += nums[j]
-        #         if dp == k: count += 1
-        # return count
-
         # 2、dp
         count, cur, res = {0: 1}, 0, 0
         for v in nums:
@@ -1700,6 +1725,127 @@ class Solution:
             jump = max(jump, nums[i] + i)
         return jump >= (len(nums) - 1)
 
+    def coinChange(self, coins, amount):
+        """
+        :type coins: List[int]
+        :type amount: int
+        :rtype: int
+        """
+        dp = [amount+1] * (amount+1)
+        dp[0] = 0
+        for i in range(1, amount+1):
+            for coin in coins:
+                if (i - coin >= 0):
+                    dp[i] = min(dp[i], dp[i-coin] + 1)
+        return -1 if dp[amount] == (amount+1) else dp[amount]
+
+    def copyRandomList(self, head):
+        """
+        :type head: Node
+        :rtype: Node
+        """
+        if head is None: return head
+        dic, node = {None:None}, head
+        while node is not None:
+            dic[node] = Node(node.val, None, None)
+            node = node.next
+
+        node = head
+        while node is not None:
+            dic[node].next = dic[node.next]
+            dic[node].random = dic[node.random]
+            node = node.next
+        return dic[head]
+
+    def isValidBST(self, root):
+        """
+        :type root: TreeNode
+        :rtype: bool
+        """
+        def helper(root, l):
+            if root is None: return
+            helper(root.left, l)
+            l.append(root.val)
+            helper(root.right, l)
+
+        l = []
+        helper(root, l)
+
+        for i in range(len(l)-1):
+            if l[i+1] <= l[i]:
+                return False
+        return True
+
+    def minDistance(self, word1, word2):
+        """
+        :type word1: str
+        :type word2: str
+        :rtype: int
+        """
+        dp = [[0] * (len(word2)+1) for _ in range(len(word1)+1)]
+        for i in range(1, len(word2)+1):
+            dp[0][i] = i
+        for i in range(1, len(word1)+1):
+            dp[i][0] = i
+
+        for i in range(1, len(word1)+1):
+            for j in range(1, len(word2)+1):
+                dp[i][j] = min(dp[i - 1][j - 1], dp[i - 1][j], dp[i][j - 1]) + 1
+                if word1[i-1] == word2[j-1]:
+                    dp[i][j] = dp[i-1][j-1]
+        return dp[len(word1)][len(word2)]
+
+    def mergeKLists(self, lists):
+        """
+        :type lists: List[ListNode]
+        :rtype: ListNode
+        """
+        min_v, max_v, n_map = sys.maxint, -sys.maxint, {}
+        for head in lists:
+            node = head
+            while node is not None:
+                if n_map.has_key(node.val):
+                    n_map[node.val].append(node)
+                else:
+                    n_map[node.val] = [node]
+
+                if node.val > max_v: max_v = node.val
+                if node.val < min_v: min_v = node.val
+
+                node = node.next
+
+        head = ListNode(0)
+        tmp = head
+        for i in xrange(min_v, max_v+1):
+            if n_map.has_key(i):
+                for node in n_map[i]:
+                    tmp.next = node
+                    tmp = tmp.next
+        return head.next
+
+    def threeSum(self, nums):
+        """
+        :type nums: List[int]
+        :rtype: List[List[int]]
+        """
+        if len(nums) < 3:
+            return []
+        nums.sort()
+        res, m_map = [], {}
+        for i, v in enumerate(nums[:-2]):
+            if i >= 1 and v == nums[i - 1]:
+                continue
+            d = {}
+            for x in nums[i + 1:]:
+                if d.has_key(x):
+                    if not m_map.has_key((v, -v - x, x)):
+                        res.append([v, -v - x, x])
+                        m_map[(v, -v - x, x)] = None
+                else:
+                    d[-v - x] = 1
+        return res
+
+
 
 
 
@@ -1709,5 +1855,28 @@ if __name__ == '__main__':
     # print s.findPeakElement([1, 2])
     # print(s.findKthLargest([3,2,1,5,6,4], 2))
     # print s.canFinish(3, [[0,1],[0,2],[1,2]])
-    print s.canJump([3,0,8,2,0,0,1])
+    ss = "1,3,5,8,10,11,13,14,15,17,19,20,22,23,24,25,26,29,30,31,33,35,36,39,40,41,42,43,44,46,53,54,55,59,60,64,65,130,132,133,137,143,144,146,148,149,181,182,210,214,215,218,219,220,223,226,267,268,274,275,276,277,280,281,283,284,285,286,288,289,295,297,298,299,300,301,302,303,304,305,311,312,313,314,315,316,317,318,319,329,330,331,10004,10005,10008,10010,10011,10012,10013,10014,10016,10017,10021,10024,10027,10082,10085,10093,10095,10097,10098,10112,10113,10139,10141,10142,10156,10158,10159,10160,10161,10164,10170,10171,10173,10179,10182,10193,10194,10195,10196,10197,10198,10199,10200,10201,10203,10204,10205,10206,10207,10211,10221,10225,10226,10227,10273,10274,10282,10283,10284"
+    ss1 = "1,6,9,17,20,21,22,23,24,25,26,29,30,31,32,33,35,36,39,40,41,42,43,44,45,46,47,49,50,51,54,61,63,144,181,182,210,213,214,215,219,220,223,226,277,10002,10004,10005,10007,10008,10010,10011,10012,10013,10016,10017,10019,10021,10027,10028,10029,10030,10082,10083,10085,10086,10088,10089,10090,10091,10092,10093,10095,10097,10100,10101,10102,10106,10110,10112,10113,10114"
 
+    ss_map = {}
+    ss_split = []
+    for slot in ss.split(","):
+        ss_map[slot] = 1
+        ss_split.append(int(slot))
+
+    count = 0
+    for slot in ss1.split(","):
+        if ss_map.has_key(slot):
+            count += 1
+        else:
+            ss_split.append(int(slot))
+    print "common slot size = ", count
+    print len(ss_split)
+    ss_split.sort()
+    print ss_split
+
+
+    # job = ""
+    # for ips in ip.split(","):
+    #     job += ("sdnn_time_truncate_model-"+ips+"|")
+    # print job
